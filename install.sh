@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Protecter: build and install a real SwiftUI macOS app.
+# Protecter: build and install a lightweight native AppKit macOS app.
 RESET=$'\033[0m'; BOLD=$'\033[1m'; CYAN=$'\033[96m'; BLUE=$'\033[94m'
 GREEN=$'\033[92m'; YELLOW=$'\033[93m'; RED=$'\033[91m'; DIM=$'\033[2m'
 
@@ -20,7 +20,7 @@ step() { printf "\n%s%s➜ %s%s\n" "$BLUE" "$BOLD" "$1" "$RESET"; }
 ok() { printf "  %s✔ %s%s\n" "$GREEN" "$1" "$RESET"; }
 
 [[ "$(uname -s)" == "Darwin" ]] || fail "Protecter requires macOS."
-command -v swiftc >/dev/null 2>&1 || fail "Swift compiler missing. Install Apple's Command Line Tools: xcode-select --install"
+command -v clang >/dev/null 2>&1 || fail "Clang compiler missing. Install Apple's Command Line Tools: xcode-select --install"
 
 REPO="https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main"
 APP="$HOME/Applications/Protecter.app"
@@ -28,10 +28,10 @@ CACHE_ROOT="$HOME/Library/Caches/Protecter"
 BUILD_DIR="$(/usr/bin/mktemp -d)"
 trap '/bin/rm -rf "$BUILD_DIR"' EXIT
 
-step "Downloading Protecter source and icon"
-curl -fsSL "$REPO/Protecter.swift" -o "$BUILD_DIR/Protecter.swift" || fail "Could not download Swift source."
+step "Downloading lightweight Protecter source and icon"
+curl -fsSL "$REPO/Protecter.m" -o "$BUILD_DIR/Protecter.m" || fail "Could not download app source."
 curl -fsSL "$REPO/Protecter.icns" -o "$BUILD_DIR/Protecter.icns" || fail "Could not download the app icon."
-BUILD_KEY="$(/usr/bin/shasum -a 256 "$BUILD_DIR/Protecter.swift" "$BUILD_DIR/Protecter.icns" | /usr/bin/shasum -a 256 | /usr/bin/cut -d ' ' -f 1)"
+BUILD_KEY="$(/usr/bin/shasum -a 256 "$BUILD_DIR/Protecter.m" "$BUILD_DIR/Protecter.icns" | /usr/bin/shasum -a 256 | /usr/bin/cut -d ' ' -f 1)"
 CACHED_APP="$CACHE_ROOT/$BUILD_KEY.app"
 ok "Files downloaded"
 
@@ -40,11 +40,11 @@ if [[ -x "$CACHED_APP/Contents/MacOS/Protecter" ]]; then
   /bin/cp -R "$CACHED_APP" "$BUILD_DIR/Protecter.app"
   ok "Cached native app reused (compile skipped)"
 else
-  step "Compiling native SwiftUI executable (quick first build)"
+  step "Compiling tiny native AppKit executable"
   mkdir -p "$BUILD_DIR/Protecter.app/Contents/MacOS" "$BUILD_DIR/Protecter.app/Contents/Resources"
-  swiftc -Onone -framework SwiftUI -framework AppKit \
-    "$BUILD_DIR/Protecter.swift" \
-    -o "$BUILD_DIR/Protecter.app/Contents/MacOS/Protecter" || fail "Swift compilation failed."
+  clang -fobjc-arc -fmodules -framework Cocoa \
+    "$BUILD_DIR/Protecter.m" \
+    -o "$BUILD_DIR/Protecter.app/Contents/MacOS/Protecter" || fail "App compilation failed."
   ok "App executable compiled"
 
   step "Packaging Protecter.app"
