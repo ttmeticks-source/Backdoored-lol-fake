@@ -10,8 +10,34 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "Download Guard currently supports macOS only."
   exit 1
 fi
+
+# Homebrew is installed only after an explicit confirmation. The installer is
+# commonly piped into bash, so read the answer from the user's terminal.
 if ! command -v brew >/dev/null 2>&1; then
-  echo "Homebrew is required. Install it from https://brew.sh, then rerun this command."
+  echo "Homebrew is not installed. Download Guard needs it to install ClamAV."
+  read -r -p "Install Homebrew now using the official installer? [y/N] " answer </dev/tty || answer="n"
+  case "$answer" in
+    [yY]|[yY][eE][sS])
+      echo "Running the official Homebrew installer..."
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      ;;
+    *)
+      echo "No changes made. Install Homebrew from https://brew.sh, then rerun this command."
+      exit 1
+      ;;
+  esac
+
+  # Homebrew is not always added to PATH automatically in non-interactive shells.
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+fi
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "Homebrew installation did not finish correctly."
+  echo "Open a new Terminal window, then rerun the install command."
   exit 1
 fi
 
@@ -67,5 +93,7 @@ launchctl enable "gui/$(id -u)/com.c0oled.downloadguard"
 
 echo "[4/4] Done."
 echo "Download Guard is watching: $HOME/Downloads"
+echo "On its first start, it scans files already in Downloads."
+echo "After that, it scans only new or changed files (scan history is saved)."
 echo "Quarantine: $APP_DIR/Quarantine"
 echo "Logs: $APP_DIR/Logs"
