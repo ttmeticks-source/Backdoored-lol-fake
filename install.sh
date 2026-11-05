@@ -21,11 +21,8 @@ chmod 700 "$DATA/scanner.py"
 TMP_SCRIPT="$(/usr/bin/mktemp)"
 cat > "$TMP_SCRIPT" <<'APPLESCRIPT'
 on run
-    set py to "/usr/bin/python3"
-    set scriptPath to (POSIX path of (path to home folder)) & "Library/Application Support/c0oled-Scanner/scanner.py"
-    set logPath to (POSIX path of (path to home folder)) & "Library/Application Support/c0oled-Scanner/Logs/launcher.log"
-    set cmd to quoted form of py & " " & quoted form of scriptPath & " >> " & quoted form of logPath & " 2>&1 &"
-    do shell script cmd
+    set userId to do shell script "/usr/bin/id -u"
+    do shell script "/bin/launchctl kickstart gui/" & userId & "/com.c0oled.scanner"
     display notification "Local Downloads monitoring is running." with title "c0oled Scanner"
 end run
 APPLESCRIPT
