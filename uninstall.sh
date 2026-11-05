@@ -1,11 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-LABEL="com.c0oled.downloadguard"
-PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
-APP_DIR="$HOME/Library/Application Support/DownloadGuard"
+LABEL="com.c0oled.protecter"
 launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
 launchctl disable "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
-rm -f "$PLIST"
-rm -rf "$APP_DIR/scanner.py" "$APP_DIR/freshclam.conf" "$APP_DIR/state.json"
-echo "Download Guard monitor removed."
-echo "Quarantined files and logs were kept at: $APP_DIR"
+rm -f "$HOME/Library/LaunchAgents/$LABEL.plist"
+rm -rf "$HOME/Applications/Protecter.app"
+rm -rf "$HOME/Library/Application Support/Protecter/scanner.py" "$HOME/Library/Application Support/Protecter/state.json"
+echo "Protecter was removed. Quarantine and logs were kept in ~/Library/Application Support/Protecter."
