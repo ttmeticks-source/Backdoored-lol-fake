@@ -91,7 +91,28 @@ launchctl bootout "gui/$(id -u)/com.c0oled.downloadguard" >/dev/null 2>&1 || tru
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 launchctl enable "gui/$(id -u)/com.c0oled.downloadguard"
 
-echo "[4/4] Done."
+echo "[4/5] Creating Download Guard.app..."
+mkdir -p "$HOME/Applications"
+APPLESCRIPT="$APP_DIR/DownloadGuard.applescript"
+cat > "$APPLESCRIPT" <<'APPLESCRIPT'
+on run
+    set userId to do shell script "/usr/bin/id -u"
+    try
+        do shell script "/bin/launchctl kickstart gui/" & userId & "/com.c0oled.downloadguard"
+        display notification "Downloads are being monitored. New and changed files will be scanned." with title "Download Guard"
+    on error errorMessage
+        display dialog "Could not start the Download Guard monitor: " & errorMessage buttons {"OK"} default button "OK"
+    end try
+end run
+APPLESCRIPT
+if [[ -d "$HOME/Applications/Download Guard.app" ]]; then
+  echo "Updating existing Download Guard.app"
+fi
+/usr/bin/osacompile -o "$HOME/Applications/Download Guard.app" "$APPLESCRIPT"
+/usr/bin/plutil -replace CFBundleIdentifier -string com.c0oled.downloadguard.app "$HOME/Applications/Download Guard.app/Contents/Info.plist"
+/usr/bin/plutil -replace CFBundleName -string "Download Guard" "$HOME/Applications/Download Guard.app/Contents/Info.plist"
+
+echo "[5/5] Done."
 echo "Download Guard is watching: $HOME/Downloads"
 echo "On its first start, it scans files already in Downloads."
 echo "After that, it scans only new or changed files (scan history is saved)."
