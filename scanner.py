@@ -10,22 +10,22 @@ LOGS = ROOT / "Logs"
 STATE = ROOT / "state.json"
 POLL, STABLE, MAX_READ = 4, 5, 2 * 1024 * 1024
 PATTERNS = [
-    re.compile(rb"curl.{0,160}\\|\\s*(?:bash|sh)", re.I),
-    re.compile(rb"base64\\s+--decode|base64\\s+-d", re.I),
-    re.compile(rb"osascript\\s+-e", re.I),
-    re.compile(rb"launchctl\\s+(?:load|bootstrap|enable)", re.I),
-    re.compile(rb"security\\s+find-(?:generic|internet)-password", re.I),
-    re.compile(rb"eval\\s*\\(\\s*(?:atob|base64)", re.I),
+    re.compile(rb"curl.{0,160}\|\s*(?:bash|sh)", re.I),
+    re.compile(rb"base64\s+--decode|base64\s+-d", re.I),
+    re.compile(rb"osascript\s+-e", re.I),
+    re.compile(rb"launchctl\s+(?:load|bootstrap|enable)", re.I),
+    re.compile(rb"security\s+find-(?:generic|internet)-password", re.I),
+    re.compile(rb"eval\s*\(\s*(?:atob|base64)", re.I),
 ]
 SCRIPT_EXTS = {".sh", ".command", ".py", ".js", ".jsx", ".scpt", ".applescript"}
 
 def log(message):
     LOGS.mkdir(parents=True, exist_ok=True)
     with (LOGS / "protecter.log").open("a", encoding="utf-8") as f:
-        f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + message + "\\n")
+        f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + message + "\n")
 
 def notify(message):
-    safe = message.replace("\\", "\\\\").replace('"', '\\"')
+    safe = message.replace("\", "\\").replace('"', '\"')
     subprocess.run(["/usr/bin/osascript", "-e",
         f'display notification "{safe}" with title "Protecter"'],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
