@@ -25,7 +25,7 @@ def log(message):
         f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + message + "\\n")
 
 def notify(message):
-    safe = message.replace("\\\\", "\\\\\\\\").replace('"', '\\\\"')
+    safe = message.replace("\\", "\\\\").replace('"', '\\"')
     subprocess.run(["/usr/bin/osascript", "-e",
         f'display notification "{safe}" with title "Protecter"'],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
