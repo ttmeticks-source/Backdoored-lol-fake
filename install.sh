@@ -24,25 +24,31 @@ command -v swiftc >/dev/null 2>&1 || fail "Swift compiler missing. Install Apple
 
 REPO="https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main"
 APP="$HOME/Applications/Protecter.app"
+CACHE_ROOT="$HOME/Library/Caches/Protecter"
 BUILD_DIR="$(/usr/bin/mktemp -d)"
 trap '/bin/rm -rf "$BUILD_DIR"' EXIT
 
-step "Downloading Protecter source"
-curl --fail --location --retry 3 --show-error --progress-bar \
-  "$REPO/Protecter.swift" --output "$BUILD_DIR/Protecter.swift" || fail "Could not download Swift source."
-curl --fail --location --retry 3 --show-error --progress-bar \
-  "$REPO/Protecter.icns" --output "$BUILD_DIR/Protecter.icns" || fail "Could not download the app icon."
-ok "Source and icon downloaded"
+step "Downloading Protecter source and icon"
+curl -fsSL "$REPO/Protecter.swift" -o "$BUILD_DIR/Protecter.swift" || fail "Could not download Swift source."
+curl -fsSL "$REPO/Protecter.icns" -o "$BUILD_DIR/Protecter.icns" || fail "Could not download the app icon."
+BUILD_KEY="$(/usr/bin/shasum -a 256 "$BUILD_DIR/Protecter.swift" "$BUILD_DIR/Protecter.icns" | /usr/bin/shasum -a 256 | /usr/bin/cut -d ' ' -f 1)"
+CACHED_APP="$CACHE_ROOT/$BUILD_KEY.app"
+ok "Files downloaded"
 
-step "Compiling native SwiftUI executable (fast build)"
-mkdir -p "$BUILD_DIR/Protecter.app/Contents/MacOS" "$BUILD_DIR/Protecter.app/Contents/Resources"
-swiftc -Onone -framework SwiftUI -framework AppKit \
-  "$BUILD_DIR/Protecter.swift" \
-  -o "$BUILD_DIR/Protecter.app/Contents/MacOS/Protecter" || fail "Swift compilation failed."
-ok "App executable compiled"
+if [[ -x "$CACHED_APP/Contents/MacOS/Protecter" ]]; then
+  step "Using cached Protecter build"
+  /bin/cp -R "$CACHED_APP" "$BUILD_DIR/Protecter.app"
+  ok "Cached native app reused (compile skipped)"
+else
+  step "Compiling native SwiftUI executable (quick first build)"
+  mkdir -p "$BUILD_DIR/Protecter.app/Contents/MacOS" "$BUILD_DIR/Protecter.app/Contents/Resources"
+  swiftc -Onone -framework SwiftUI -framework AppKit \
+    "$BUILD_DIR/Protecter.swift" \
+    -o "$BUILD_DIR/Protecter.app/Contents/MacOS/Protecter" || fail "Swift compilation failed."
+  ok "App executable compiled"
 
-step "Packaging Protecter.app"
-cat > "$BUILD_DIR/Protecter.app/Contents/Info.plist" <<'PLIST'
+  step "Packaging Protecter.app"
+  cat > "$BUILD_DIR/Protecter.app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -57,8 +63,11 @@ cat > "$BUILD_DIR/Protecter.app/Contents/Info.plist" <<'PLIST'
 <key>NSPrincipalClass</key><string>NSApplication</string>
 </dict></plist>
 PLIST
-cp "$BUILD_DIR/Protecter.icns" "$BUILD_DIR/Protecter.app/Contents/Resources/Protecter.icns"
-/usr/bin/codesign --force --deep --sign - "$BUILD_DIR/Protecter.app" >/dev/null 2>&1 || fail "Could not sign the app bundle."
+  cp "$BUILD_DIR/Protecter.icns" "$BUILD_DIR/Protecter.app/Contents/Resources/Protecter.icns"
+  /usr/bin/codesign --force --deep --sign - "$BUILD_DIR/Protecter.app" >/dev/null 2>&1 || fail "Could not sign the app bundle."
+  /bin/mkdir -p "$CACHE_ROOT"
+  /bin/cp -R "$BUILD_DIR/Protecter.app" "$CACHED_APP"
+fi
 mkdir -p "$HOME/Applications"
 rm -rf "$APP"
 mv "$BUILD_DIR/Protecter.app" "$APP"
