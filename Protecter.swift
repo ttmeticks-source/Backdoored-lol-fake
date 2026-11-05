@@ -2,7 +2,7 @@ import SwiftUI
 import Foundation
 import AppKit
 
-struct Finding: Identifiable {
+struct Finding: Identifiable, Sendable {
     let id = UUID()
     let name: String
     let detail: String
