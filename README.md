@@ -1,6 +1,6 @@
 # Protecter — Native macOS App
 
-Protecter is a standalone SwiftUI macOS application compiled to a native executable inside `Protecter.app`. It is not an AppleScript wrapper, web app, or background service.
+Protecter is a standalone SwiftUI macOS application compiled to a native executable inside `Protecter.app`, with a custom `.icns` app icon. It is not an AppleScript wrapper, web app, or background service.
 
 ## Install
 
@@ -19,4 +19,4 @@ Requires macOS 14+ and Apple's Swift compiler. Install Apple's Command Line Tool
 - Does not delete, move, or modify files
 - No LaunchAgent or background service
 
-This is a basic heuristic review tool, not a full antivirus. It may miss threats or flag legitimate scripts.
+The installer uses a faster non-optimized Swift compile and packages `Protecter.icns` as the Finder app icon. This is a basic heuristic review tool, not a full antivirus. It may miss threats or flag legitimate scripts.
