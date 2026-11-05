@@ -28,7 +28,7 @@ BUILD_DIR="$(/usr/bin/mktemp -d)"
 trap '/bin/rm -rf "$BUILD_DIR"' EXIT
 
 step "Downloading Protecter source"
-curl --fail --location --silent --show-error --progress-bar \
+curl --fail --location --show-error --progress-bar \
   "$REPO/Protecter.swift" --output "$BUILD_DIR/Protecter.swift" || fail "Could not download Swift source."
 ok "Source downloaded"
 
