@@ -1,57 +1,75 @@
 #!/bin/bash
 set -euo pipefail
-[[ "$(uname -s)" == "Darwin" ]] || { echo "Protecter is for macOS."; exit 1; }
 
-APP_HOME="$HOME/Applications"
-APP="$APP_HOME/Protecter.app"
-DATA="$HOME/Library/Application Support/Protecter"
-AGENT_DIR="$HOME/Library/LaunchAgents"
-LABEL="com.c0oled.protecter"
-PLIST="$AGENT_DIR/$LABEL.plist"
-BASE="https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main"
+# Protecter: build and install a real SwiftUI macOS app.
+RESET=$'\033[0m'; BOLD=$'\033[1m'; CYAN=$'\033[96m'; BLUE=$'\033[94m'
+GREEN=$'\033[92m'; YELLOW=$'\033[93m'; RED=$'\033[91m'; DIM=$'\033[2m'
 
-mkdir -p "$APP_HOME" "$DATA/Logs" "$DATA/Quarantine" "$AGENT_DIR"
-echo "Installing Protecter..."
-curl -fsSL "$BASE/scanner.py" -o "$DATA/scanner.py"
-chmod 700 "$DATA/scanner.py"
+printf "%s%s" "$CYAN" "$BOLD"
+cat <<'ART'
+  ____            _           _
+ |  _ \ _ __ ___ | |_ ___  __| |_ ___ _ __
+ | |_) | '__/ _ \| __/ _ \/ _` | __/ _ \ '__|
+ |  __/| | | (_) | ||  __/ (_| | ||  __/ |
+ |_|   |_|  \___/ \__\___|\__,_|\__\___|_|
+ART
+printf "%s            NATIVE macOS APP INSTALLER%s\n\n" "$DIM" "$RESET"
 
-# Stop the earlier development build, if present.
-launchctl bootout "gui/$(id -u)/com.c0oled.scanner" >/dev/null 2>&1 || true
-launchctl bootout "gui/$(id -u)/com.c0oled.downloadguard" >/dev/null 2>&1 || true
+fail() { printf "%s%s✖ %s%s\n" "$RED" "$BOLD" "$1" "$RESET"; exit 1; }
+step() { printf "\n%s%s➜ %s%s\n" "$BLUE" "$BOLD" "$1" "$RESET"; }
+ok() { printf "  %s✔ %s%s\n" "$GREEN" "$1" "$RESET"; }
 
-cat > "$PLIST" <<EOF
+[[ "$(uname -s)" == "Darwin" ]] || fail "Protecter requires macOS."
+command -v swiftc >/dev/null 2>&1 || fail "Swift compiler missing. Install Apple's Command Line Tools: xcode-select --install"
+
+REPO="https://raw.githubusercontent.com/ttmeticks-source/Backdoored-lol-fake/main"
+APP="$HOME/Applications/Protecter.app"
+BUILD_DIR="$(/usr/bin/mktemp -d)"
+trap '/bin/rm -rf "$BUILD_DIR"' EXIT
+
+step "Downloading Protecter source"
+curl --fail --location --silent --show-error --progress-bar \
+  "$REPO/Protecter.swift" --output "$BUILD_DIR/Protecter.swift" || fail "Could not download Swift source."
+ok "Source downloaded"
+
+step "Compiling native SwiftUI executable"
+mkdir -p "$BUILD_DIR/Protecter.app/Contents/MacOS"
+swiftc -O -framework SwiftUI -framework AppKit \
+  "$BUILD_DIR/Protecter.swift" \
+  -o "$BUILD_DIR/Protecter.app/Contents/MacOS/Protecter" || fail "Swift compilation failed."
+ok "App executable compiled"
+
+step "Packaging Protecter.app"
+cat > "$BUILD_DIR/Protecter.app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
- <key>Label</key><string>$LABEL</string>
- <key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>$DATA/scanner.py</string></array>
- <key>EnvironmentVariables</key><dict><key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin</string></dict>
- <key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
- <key>StandardOutPath</key><string>$DATA/Logs/agent.out.log</string>
- <key>StandardErrorPath</key><string>$DATA/Logs/agent.err.log</string>
+<key>CFBundleExecutable</key><string>Protecter</string>
+<key>CFBundleIdentifier</key><string>com.c0oled.protecter</string>
+<key>CFBundleName</key><string>Protecter</string>
+<key>CFBundleDisplayName</key><string>Protecter</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>NSHighResolutionCapable</key><true/>
+<key>NSPrincipalClass</key><string>NSApplication</string>
 </dict></plist>
-EOF
-
-TMP_SCRIPT="$(/usr/bin/mktemp)"
-cat > "$TMP_SCRIPT" <<'APPLESCRIPT'
-on run
-    set userId to do shell script "/usr/bin/id -u"
-    do shell script "/bin/launchctl kickstart gui/" & userId & "/com.c0oled.protecter"
-    display notification "Protecter is monitoring your Downloads folder." with title "Protecter"
-end run
-APPLESCRIPT
-
+PLIST
+/usr/bin/codesign --force --deep --sign - "$BUILD_DIR/Protecter.app" >/dev/null 2>&1 || fail "Could not sign the app bundle."
+mkdir -p "$HOME/Applications"
 rm -rf "$APP"
-/usr/bin/osacompile -o "$APP" "$TMP_SCRIPT"
-rm -f "$TMP_SCRIPT"
-/usr/bin/plutil -replace CFBundleIdentifier -string com.c0oled.protecter.app "$APP/Contents/Info.plist"
-/usr/bin/plutil -replace CFBundleName -string "Protecter" "$APP/Contents/Info.plist"
+mv "$BUILD_DIR/Protecter.app" "$APP"
+ok "Standalone application installed"
 
-launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
-launchctl enable "gui/$(id -u)/$LABEL"
+# Remove the previous background wrapper, if an older install left one behind.
+launchctl bootout "gui/$(id -u)/com.c0oled.scanner" >/dev/null 2>&1 || true
+launchctl bootout "gui/$(id -u)/com.c0oled.protecter" >/dev/null 2>&1 || true
+rm -f "$HOME/Library/LaunchAgents/com.c0oled.scanner.plist" "$HOME/Library/LaunchAgents/com.c0oled.protecter.plist"
+rm -rf "$HOME/Applications/c0oled Scanner.app"
 
-echo "Installed: $APP"
-echo "No Homebrew or ClamAV required."
-echo "Review flagged files in: $DATA/Quarantine"
-echo "Logs: $DATA/Logs"
+printf "\n%s%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n" "$GREEN" "$BOLD" "$RESET"
+printf "%s%s  ✓ PROTECTER IS INSTALLED%s\n" "$GREEN" "$BOLD" "$RESET"
+printf "%s  App: %s%s\n" "$CYAN" "$APP" "$RESET"
+printf "%s  Launch: open \"%s\"%s\n" "$CYAN" "$APP" "$RESET"
+printf "%s  Open it and select Scan Downloads.%s\n" "$YELLOW" "$RESET"
+printf "%s%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n\n" "$GREEN" "$BOLD" "$RESET"
+open "$APP"
