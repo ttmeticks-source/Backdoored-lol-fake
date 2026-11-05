@@ -28,13 +28,15 @@ BUILD_DIR="$(/usr/bin/mktemp -d)"
 trap '/bin/rm -rf "$BUILD_DIR"' EXIT
 
 step "Downloading Protecter source"
-curl --fail --location --show-error --progress-bar \
+curl --fail --location --retry 3 --show-error --progress-bar \
   "$REPO/Protecter.swift" --output "$BUILD_DIR/Protecter.swift" || fail "Could not download Swift source."
-ok "Source downloaded"
+curl --fail --location --retry 3 --show-error --progress-bar \
+  "$REPO/Protecter.icns" --output "$BUILD_DIR/Protecter.icns" || fail "Could not download the app icon."
+ok "Source and icon downloaded"
 
-step "Compiling native SwiftUI executable"
-mkdir -p "$BUILD_DIR/Protecter.app/Contents/MacOS"
-swiftc -O -framework SwiftUI -framework AppKit \
+step "Compiling native SwiftUI executable (fast build)"
+mkdir -p "$BUILD_DIR/Protecter.app/Contents/MacOS" "$BUILD_DIR/Protecter.app/Contents/Resources"
+swiftc -Onone -framework SwiftUI -framework AppKit \
   "$BUILD_DIR/Protecter.swift" \
   -o "$BUILD_DIR/Protecter.app/Contents/MacOS/Protecter" || fail "Swift compilation failed."
 ok "App executable compiled"
@@ -49,11 +51,13 @@ cat > "$BUILD_DIR/Protecter.app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Protecter</string>
 <key>CFBundleDisplayName</key><string>Protecter</string>
 <key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleIconFile</key><string>Protecter</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSPrincipalClass</key><string>NSApplication</string>
 </dict></plist>
 PLIST
+cp "$BUILD_DIR/Protecter.icns" "$BUILD_DIR/Protecter.app/Contents/Resources/Protecter.icns"
 /usr/bin/codesign --force --deep --sign - "$BUILD_DIR/Protecter.app" >/dev/null 2>&1 || fail "Could not sign the app bundle."
 mkdir -p "$HOME/Applications"
 rm -rf "$APP"
