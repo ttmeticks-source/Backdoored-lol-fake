@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import AppKit
 
 struct Finding: Identifiable {
     let id = UUID()
@@ -53,7 +54,7 @@ final class ScanModel: ObservableObject {
                         }
                         if matched.count >= 2 {
                             hits.append(Finding(name: url.lastPathComponent,
-                                                detail: matched.map(\.0).joined(separator: ", "),
+                                                detail: matched.map { $0.0 }.joined(separator: ", "),
                                                 path: url.path))
                         }
                     }
